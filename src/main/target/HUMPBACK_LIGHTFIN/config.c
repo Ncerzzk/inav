@@ -27,6 +27,7 @@
 
 #include "platform.h"
 
+#include "drivers/pwm_mapping.h"
 #include "drivers/timer.h"
 #include "fc/config.h"
 #include "io/serial.h"
@@ -42,6 +43,34 @@ static void updateUartTimerUsage(serialPortIdentifier_e portIdentifier, int firs
 
 void validateAndFixTargetConfig(void)
 {
+    /*
+     * Apply PWM output inversion policy for this target.
+     *
+     * This board requires inverted PWM polarity for servo outputs on
+     * certain timers. TMR1 and TMR2 (all channels except CH3) are
+     * excluded because they need normal polarity regardless of use.
+     *
+     * For each timer channel:
+     *  - Motor output → normal polarity (no inversion)
+     *  - Servo / other output → inverted polarity
+     *
+     * Setting TIMER_OUTPUT_INVERTED directly in timerHardware[].output
+     * avoids modifying shared pwm_output.c / timer driver code. The flag
+     * is read by impl_timerPWMConfigChannel() when configuring the timer
+     * output channel.
+     */
+    for (int i = 0; i < timerHardwareCount; i++) {
+        // TMR1 and TMR2 (except CH3) always use normal polarity
+        if (timerHardware[i].tim == TMR1) continue;
+        if (timerHardware[i].tim == TMR2 && timerHardware[i].channelIndex != 3) continue;
+
+        if(TIM_IS_MOTOR(timerHardware[i].usageFlags) && motorConfig()->motorPwmProtocol == PWM_TYPE_BRUSHED) continue;
+        
+        // Servo / non-brushed-motor outputs: inverted
+        timerHardware[i].output |= TIMER_OUTPUT_INVERTED;
+
+    }
+
     updateUartTimerUsage(SERIAL_PORT_USART1, 4);
     updateUartTimerUsage(SERIAL_PORT_USART5, 6);
 }
