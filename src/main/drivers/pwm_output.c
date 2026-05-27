@@ -138,12 +138,30 @@ uint8_t burstDmaTimersCount = 0;
 #endif
 #endif
 
-static void pwmOutConfigTimer(pwmOutputPort_t * p, TCH_t * tch, uint32_t hz, uint16_t period, uint16_t value)
+__attribute__((weak)) bool pwmOutputShouldBeInverted(const timerHardware_t *timerHardware, resourceOwner_e owner)
+{
+    UNUSED(owner);
+
+    return timerHardware->output & TIMER_OUTPUT_INVERTED;
+}
+
+static void pwmOutConfigTimer(pwmOutputPort_t * p, TCH_t * tch, resourceOwner_e owner, uint32_t hz, uint16_t period, uint16_t value)
 {
     p->tch = tch;
 
     timerConfigBase(p->tch, period, hz);
+
+    timerHardware_t *mutableTimHw = (timerHardware_t *)tch->timHw;
+    const uint8_t savedOutputFlags = mutableTimHw->output;
+    if (pwmOutputShouldBeInverted(tch->timHw, owner)) {
+        mutableTimHw->output |= TIMER_OUTPUT_INVERTED;
+    } else {
+        mutableTimHw->output &= ~TIMER_OUTPUT_INVERTED;
+    }
+
     timerPWMConfigChannel(p->tch, value);
+    mutableTimHw->output = savedOutputFlags;
+
     timerPWMStart(p->tch);
 
     timerEnable(p->tch);
@@ -184,7 +202,7 @@ static pwmOutputPort_t *pwmOutConfig(const timerHardware_t *timHw, resourceOwner
     const IO_t io = IOGetByTag(timHw->tag);
     IOInit(io, owner, RESOURCE_OUTPUT, allocatedOutputPortCount);
 
-    pwmOutConfigTimer(p, tch, hz, period, value);
+    pwmOutConfigTimer(p, tch, owner, hz, period, value);
 
     if (enableOutput) {
         IOConfigGPIOAF(io, IOCFG_AF_PP, timHw->alternateFunction);
@@ -780,7 +798,7 @@ void beeperPwmInit(ioTag_t tag, uint16_t frequency)
         beeperPwm = &beeperPwmPort;
         beeperFrequency = frequency;
         IOConfigGPIOAF(IOGetByTag(tag), IOCFG_AF_PP, timHw->alternateFunction);
-        pwmOutConfigTimer(beeperPwm, tch, PWM_TIMER_HZ, 1000000 / beeperFrequency, (1000000 / beeperFrequency) / 2);
+        pwmOutConfigTimer(beeperPwm, tch, OWNER_BEEPER, PWM_TIMER_HZ, 1000000 / beeperFrequency, (1000000 / beeperFrequency) / 2);
     }
 }
 

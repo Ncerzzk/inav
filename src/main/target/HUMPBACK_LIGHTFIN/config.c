@@ -27,6 +27,8 @@
 
 #include "platform.h"
 
+#include "drivers/pwm_mapping.h"
+#include "drivers/pwm_output.h"
 #include "drivers/timer.h"
 #include "fc/config.h"
 #include "io/serial.h"
@@ -38,6 +40,23 @@ static void updateUartTimerUsage(serialPortIdentifier_e portIdentifier, int firs
 
     timerHardware[firstTimerIndex].usageFlags = useAsDshot ? TIM_USE_OUTPUT_AUTO : TIM_USE_ANY;
     timerHardware[firstTimerIndex + 1].usageFlags = useAsDshot ? TIM_USE_OUTPUT_AUTO : TIM_USE_ANY;
+}
+
+bool pwmOutputShouldBeInverted(const timerHardware_t *timerHardware, resourceOwner_e owner)
+{
+    if (timerHardware->tim == TMR1 || (timerHardware->tim == TMR2 && timerHardware->channelIndex != 3 )) {
+        return false;
+    }
+
+    if (owner == OWNER_SERVO) {
+        return true;
+    }
+
+    if (owner == OWNER_MOTOR) {
+        return motorConfig()->motorPwmProtocol != PWM_TYPE_BRUSHED;
+    }
+
+    return false;
 }
 
 void validateAndFixTargetConfig(void)

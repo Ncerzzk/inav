@@ -18,6 +18,7 @@
 #pragma once
 
 #include "drivers/io_types.h"
+#include "drivers/resource.h"
 #include "drivers/time.h"
 
 
@@ -65,3 +66,4 @@ void sendDShotCommand(dshotCommands_e cmd);
 void initDShotCommands(void);
 
 uint32_t getEscUpdateFrequency(void);
+bool pwmOutputShouldBeInverted(const struct timerHardware_s *timerHardware, resourceOwner_e owner);
