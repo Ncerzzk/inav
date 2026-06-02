@@ -86,6 +86,17 @@
         BUSDEV_REGISTER_SPI(busdev_icm45686,    DEVHW_ICM45686,     ICM45686_SPI_BUS,   ICM45686_CS_PIN,    NONE,  DEVFLAGS_NONE,  IMU_ICM45686_ALIGN);
     #endif
 
+    #if defined(USE_IMU_SC7U22)
+        #if defined(SC7U22_SPI_BUS)
+        BUSDEV_REGISTER_SPI(busdev_sc7u22,       DEVHW_SC7U22,       SC7U22_SPI_BUS,     SC7U22_CS_PIN,      NONE,  DEVFLAGS_NONE,  IMU_SC7U22_ALIGN);
+        #elif defined(SC7U22_I2C_BUS)
+            #if !defined(SC7U22_I2C_ADDR)
+            #define SC7U22_I2C_ADDR 0x19
+            #endif
+        BUSDEV_REGISTER_I2C(busdev_sc7u22,       DEVHW_SC7U22,       SC7U22_I2C_BUS,     SC7U22_I2C_ADDR,    NONE,  DEVFLAGS_NONE,  IMU_SC7U22_ALIGN);
+        #endif
+    #endif
+
 #endif
 
 

@@ -47,6 +47,7 @@
 #include "drivers/accgyro/accgyro_icm42605.h"
 #include "drivers/accgyro/accgyro_icm45686.h"
 #include "drivers/accgyro/accgyro_lsm6dxx.h"
+#include "drivers/accgyro/accgyro_sc7u22.h"
 #include "drivers/accgyro/accgyro_fake.h"
 #include "drivers/sensor.h"
 
@@ -252,6 +253,18 @@ static bool accDetect(accDev_t *dev, accelerationSensor_e accHardwareToUse)
     case ACC_ICM45686:
         if (icm45686AccDetect(dev)) {
             accHardware = ACC_ICM45686;
+            break;
+        }
+        /* If we are asked for a specific sensor - break out, otherwise - fall through and continue */
+        if (accHardwareToUse != ACC_AUTODETECT) {
+            break;
+        }
+        FALLTHROUGH;
+#endif
+#ifdef USE_IMU_SC7U22
+    case ACC_SC7U22:
+        if (sc7u22AccDetect(dev)) {
+            accHardware = ACC_SC7U22;
             break;
         }
         /* If we are asked for a specific sensor - break out, otherwise - fall through and continue */
