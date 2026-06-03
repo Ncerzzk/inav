@@ -44,6 +44,12 @@
 #define LSM6DXX_CS_PIN           SPI1_NSS_PIN
 #define LSM6DXX_SPI_BUS          BUS_SPI1
 
+// SC7U22
+#define USE_IMU_SC7U22
+#define IMU_SC7U22_ALIGN         CW270_DEG_FLIP
+#define SC7U22_CS_PIN            SPI1_NSS_PIN
+#define SC7U22_SPI_BUS           BUS_SPI1
+
 // *************** I2C/Baro/Mag/EXT*********************
 
 //  USE IIC2
@@ -126,4 +132,3 @@
 #define MAX_PWM_OUTPUT_PORTS        8
 #define USE_DSHOT
 #define USE_ESC_SENSOR
-
